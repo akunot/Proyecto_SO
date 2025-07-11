@@ -176,7 +176,6 @@ def limpiar_datos():
     entry_quantum.delete(0, tk.END)
     entry_quantum.insert(0, "Quantum")
 
-
 def graficar_gantt(resultados):
     fig, gnt = plt.subplots()
     gnt.set_title('Diagrama de Gantt')
