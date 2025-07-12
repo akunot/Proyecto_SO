@@ -109,11 +109,18 @@ def round_robin(procesos, quantum):
 
 def agregar_proceso():
     try:
-        nombre = entry_nombre.get()
+        nombre = entry_nombre.get().strip()
         llegada = int(entry_llegada.get())
         servicio = int(entry_servicio.get())
+
         if not nombre:
             raise ValueError("Nombre vacío")
+
+        # Verificar si ya existe un proceso igual
+        if any(p[0] == nombre for p in procesos):
+            messagebox.showwarning("Proceso duplicado", "Este proceso ya fue agregado.")
+            return
+
         procesos.append((nombre, llegada, servicio))
         tree.insert("", tk.END, values=(nombre, llegada, servicio))
         entry_nombre.delete(0, tk.END)
@@ -121,6 +128,7 @@ def agregar_proceso():
         entry_servicio.delete(0, tk.END)
     except ValueError:
         messagebox.showerror("Error", "Datos inválidos. Asegúrate de ingresar valores correctos.")
+
 
 def iniciar_simulacion():
     algoritmo = combo_algoritmo.get()
