@@ -66,14 +66,6 @@ python simulador.py
 
 ---
 
-## 📷 Capturas de pantalla
-
-> Puedes agregar aquí capturas de tu interfaz en uso:
-> - Tabla de procesos
-> - Resultado con diagrama de Gantt
-> - Ejemplo con Round Robin
-
----
 
 ## 🛠️ Estructura del Código
 
