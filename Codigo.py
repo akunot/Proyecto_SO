@@ -7,103 +7,145 @@ procesos = []
 
 # Algoritmos
 
+'''
+Antes de ordenarse
+Proceso Llegada Servicio
+A       3       6
+B       0       3
+C       2       4
+'''
+
+'''
+Después de ordenarse
+Proceso Llegada Servicio
+B       0       3
+C       2       4
+A       3       6
+'''
+
 def fcfs(procesos):
-    procesos_ordenados = sorted(procesos, key=lambda x: x[1])
-    tiempo_actual = 0
-    resultados = []
+    procesos_ordenados = sorted(procesos, key=lambda x: x[1]) # Ordena los procesos por tiempo de llegada
+    tiempo_actual = 0 # Se define el tiempo actual en cero
+    resultados = [] # Se crea una lista vacia para almacenar los resultados
 
-    for nombre, llegada, servicio in procesos_ordenados:
-        inicio = max(tiempo_actual, llegada)
-        fin = inicio + servicio
-        retorno = fin - llegada
-        espera = retorno - servicio
-        retorno_normalizado = round(retorno / servicio, 2)
+    for nombre, llegada, servicio in procesos_ordenados: # Recorre los procesos ordenados
+        inicio = max(tiempo_actual, llegada) # Se toma el maximo entre el timepo actual y el tiempo de llegada
+        fin = inicio + servicio # Se calcula el fin del proceso
+        retorno = fin - llegada # Se calcula el retorno del proceso
+        espera = retorno - servicio # Se calcula la espera del proceso
+        retorno_normalizado = round(retorno / servicio, 2) # Se normaliza el retorno
 
-        resultados.append((nombre, llegada, servicio, inicio, fin, retorno, espera, retorno_normalizado))
-        tiempo_actual = fin
+        resultados.append((nombre, llegada, servicio, inicio, fin, retorno, espera, retorno_normalizado)) # Se agrega el resultado al lista
+        tiempo_actual = fin # Se actualiza el tiempo actual
 
     return resultados
+
+'''
+Antes de ordenarse
+Proceso Llegada Servicio
+A       0       3
+B       2       6
+C       4       4
+D       8       2
+'''
+
+'''
+Después de ordenarse
+Proceso Llegada Servicio
+A       0       3
+B       2       6
+C       4       4
+D       8       2
+'''
 
 def sjf(procesos):
-    procesos_ordenados = sorted(procesos, key=lambda x: x[1])
-    tiempo_actual = 0
-    resultados = []
-    lista_procesos = procesos_ordenados.copy()
-    terminados = []
+    procesos_ordenados = sorted(procesos, key=lambda x: x[1])  # Ordena los procesos por tiempo de llegada
+    tiempo_actual = 0  # Se define el tiempo actual en cero
+    resultados = []  # Se crea una lista vacía para almacenar los resultados
+    lista_procesos = procesos_ordenados.copy()  # Se copia la lista para poder modificarla sin afectar la original
+    terminados = []  # Lista no utilizada en esta versión (puede eliminarse)
 
-    while lista_procesos:
-        disponibles = [p for p in lista_procesos if p[1] <= tiempo_actual]
-        if not disponibles:
-            tiempo_actual = lista_procesos[0][1]
-            disponibles = [p for p in lista_procesos if p[1] <= tiempo_actual]
+    while lista_procesos:  # Mientras haya procesos por ejecutar
+        disponibles = [p for p in lista_procesos if p[1] <= tiempo_actual]  # Filtra los procesos que ya llegaron
 
-        siguiente = min(disponibles, key=lambda x: x[2])
-        lista_procesos.remove(siguiente)
+        if not disponibles:  # Si no hay procesos disponibles (el CPU está inactivo)
+            tiempo_actual = lista_procesos[0][1]  # Avanza el tiempo hasta el próximo proceso
+            disponibles = [p for p in lista_procesos if p[1] <= tiempo_actual]  # Se vuelven a filtrar los disponibles
 
-        nombre, llegada, servicio = siguiente
-        inicio = max(tiempo_actual, llegada)
-        fin = inicio + servicio
-        retorno = fin - llegada
-        espera = retorno - servicio
-        retorno_normalizado = round(retorno / servicio, 2)
+        siguiente = min(disponibles, key=lambda x: x[2])  # Se selecciona el proceso más corto (menor tiempo de servicio)
+        lista_procesos.remove(siguiente)  # Se elimina de la lista de procesos pendientes
 
-        resultados.append((nombre, llegada, servicio, inicio, fin, retorno, espera, retorno_normalizado))
-        tiempo_actual = fin
+        nombre, llegada, servicio = siguiente  # Se desempaca el proceso
+        inicio = max(tiempo_actual, llegada)  # El inicio será el mayor entre el tiempo actual y la llegada
+        fin = inicio + servicio  # El fin es el inicio más la duración del servicio
+        retorno = fin - llegada  # Tiempo de retorno = fin - llegada
+        espera = retorno - servicio  # Tiempo de espera = retorno - servicio
+        retorno_normalizado = round(retorno / servicio, 2)  # Retorno normalizado = retorno / servicio
 
-    return resultados
+        resultados.append((nombre, llegada, servicio, inicio, fin, retorno, espera, retorno_normalizado))  # Se agrega el resultado a la lista
+        tiempo_actual = fin  # Se actualiza el tiempo actual al fin del proceso ejecutado
+
+    return resultados  # Retorna la lista con los resultados de todos los procesos
+
 
 def round_robin(procesos, quantum):
-    procesos_ordenados = sorted(procesos, key=lambda x: x[1])
-    queue = []
-    tiempo_actual = 0
-    resultados = {}
-    tiempos_restantes = {p[0]: p[2] for p in procesos}
-    llegada_dict = {p[0]: p[1] for p in procesos}
-    servicio_dict = {p[0]: p[2] for p in procesos}
-    historial = []
+    procesos_ordenados = sorted(procesos, key=lambda x: x[1])  # Ordena los procesos por tiempo de llegada
+    queue = []  # Cola de procesos listos para ejecutarse
+    tiempo_actual = 0  # Tiempo del sistema
+    resultados = {}  # Diccionario que guardará los resultados por proceso
+    tiempos_restantes = {p[0]: p[2] for p in procesos}  # Tiempo restante de ejecución por proceso
+    llegada_dict = {p[0]: p[1] for p in procesos}  # Diccionario con los tiempos de llegada
+    servicio_dict = {p[0]: p[2] for p in procesos}  # Diccionario con los tiempos de servicio
+    historial = []  # Lista para registrar los fragmentos de ejecución (inicio, fin)
 
-    i = 0
+    i = 0  # Índice para recorrer procesos_ordenados
+
+    # Mientras haya procesos por llegar o procesos en cola
     while procesos_ordenados or queue:
+        # Agrega a la cola los procesos que ya llegaron
         while i < len(procesos_ordenados) and procesos_ordenados[i][1] <= tiempo_actual:
-            queue.append(procesos_ordenados[i][0])
-            i += 1
+            queue.append(procesos_ordenados[i][0])  # Se agrega el nombre del proceso a la cola
+            i += 1  # Avanza al siguiente proceso
 
-        if queue:
-            proceso = queue.pop(0)
-            duracion = min(quantum, tiempos_restantes[proceso])
-            inicio = tiempo_actual
-            tiempo_actual += duracion
-            tiempos_restantes[proceso] -= duracion
-            historial.append((proceso, inicio, tiempo_actual))
+        if queue:  # Si hay procesos en la cola
+            proceso = queue.pop(0)  # Se saca el primero en la cola
+            duracion = min(quantum, tiempos_restantes[proceso])  # Se calcula cuánto ejecutará (lo mínimo entre quantum y el tiempo restante)
+            inicio = tiempo_actual  # Se registra el tiempo de inicio del fragmento
+            tiempo_actual += duracion  # Se avanza el tiempo
+            tiempos_restantes[proceso] -= duracion  # Se actualiza el tiempo restante del proceso
+            historial.append((proceso, inicio, tiempo_actual))  # Se registra el fragmento ejecutado
 
+            # Verifica si llegaron más procesos durante la ejecución actual
             while i < len(procesos_ordenados) and procesos_ordenados[i][1] <= tiempo_actual:
                 queue.append(procesos_ordenados[i][0])
                 i += 1
 
             if tiempos_restantes[proceso] > 0:
-                queue.append(proceso)
+                queue.append(proceso)  # Si el proceso no terminó, vuelve al final de la cola
             else:
-                fin = tiempo_actual
-                llegada = llegada_dict[proceso]
-                servicio = servicio_dict[proceso]
-                retorno = fin - llegada
-                espera = retorno - servicio
-                retorno_normalizado = round(retorno / servicio, 2)
-                resultados[proceso] = (proceso, llegada, servicio, None, fin, retorno, espera, retorno_normalizado)
+                fin = tiempo_actual  # Se registra el tiempo de finalización
+                llegada = llegada_dict[proceso]  # Tiempo de llegada del proceso
+                servicio = servicio_dict[proceso]  # Tiempo de servicio original
+                retorno = fin - llegada  # Tiempo de retorno
+                espera = retorno - servicio  # Tiempo de espera
+                retorno_normalizado = round(retorno / servicio, 2)  # Retorno normalizado
+
+                resultados[proceso] = (proceso, llegada, servicio, None, fin, retorno, espera, retorno_normalizado)  # Se guarda el resultado
         else:
-            if i < len(procesos_ordenados):
-                tiempo_actual = procesos_ordenados[i][1]
+            if i < len(procesos_ordenados):  # Si aún quedan procesos por llegar
+                tiempo_actual = procesos_ordenados[i][1]  # Avanza el tiempo hasta el siguiente proceso
             else:
-                break
+                break  # Si no hay más procesos, termina el bucle
 
-
+    # Asigna el primer inicio encontrado en el historial para cada proceso (solo informativo)
     for proceso in resultados:
         for h in historial:
             if h[0] == proceso:
                 resultados[proceso] = (*resultados[proceso][:3], h[1], *resultados[proceso][4:])
                 break
 
-    return list(resultados.values()), historial
+    return list(resultados.values()), historial  # Devuelve los resultados y el historial de ejecución
+
 
 # GUI
 
